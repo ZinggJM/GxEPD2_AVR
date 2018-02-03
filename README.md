@@ -1,2 +1,4 @@
 # GxEPD2_AVR
-Simplified Version Of GxEPD for AVR Arduino
+Simplified Version of GxEPD for AVR Arduino
+
+under construction
