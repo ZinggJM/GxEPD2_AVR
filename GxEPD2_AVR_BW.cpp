@@ -13,7 +13,7 @@
 #include "WaveTables.h"
 
 GxEPD2_AVR_BW::GxEPD2_AVR_BW(GxEPD_Panel panel, int8_t cs, int8_t dc, int8_t rst, int8_t busy) :
-  Adafruit_GFX(GxEPD2_ScreenDimensions[panel].width, GxEPD2_ScreenDimensions[panel].height),
+  Adafruit_GFX(GxEPD2_AVR_BW_ScreenDimensions[panel].width, GxEPD2_AVR_BW_ScreenDimensions[panel].height),
   _panel(panel), _cs(cs), _dc(dc), _rst(rst), _busy(busy),
   _current_page(-1), _using_partial_mode(false)
 {
@@ -69,11 +69,6 @@ void GxEPD2_AVR_BW::drawPixel(int16_t x, int16_t y, uint16_t color)
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
   else
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
-}
-
-GxEPD2_AVR_BW::GxEPD_Panel GxEPD2_AVR_BW::panel()
-{
-  return _panel;
 }
 
 void GxEPD2_AVR_BW::init()

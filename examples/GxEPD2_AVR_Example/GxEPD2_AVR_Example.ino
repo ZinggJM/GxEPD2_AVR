@@ -30,6 +30,7 @@
 // BUSY -> 7, RST -> 9, DC -> 8, CS-> 10, CLK -> 13, DIN -> 11
 
 #include <GxEPD2_AVR_BW.h>
+#include <GxEPD2_AVR_3C.h>
 #include <Fonts/FreeMonoBold9pt7b.h>
 
 #if defined(__AVR)
@@ -40,6 +41,12 @@ GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEP015OC1, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/
 //GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEW027W3, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9, /*BUSY=*/ 7);
 //GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEW042T2, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9, /*BUSY=*/ 7);
 //GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEW075T8, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9, /*BUSY=*/ 7);
+// 3-color e-papers
+//GxEPD2_AVR_3C display(GxEPD2_AVR_3C::GDEW0154Z04, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9, /*BUSY=*/ 7);
+//GxEPD2_AVR_3C display(GxEPD2_AVR_3C::GDEW0213Z16, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9, /*BUSY=*/ 7);
+//GxEPD2_AVR_3C display(GxEPD2_AVR_3C::GDEW029Z10, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9, /*BUSY=*/ 7);
+//GxEPD2_AVR_3C display(GxEPD2_AVR_3C::GDEW027C44, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9, /*BUSY=*/ 7);
+//GxEPD2_AVR_3C display(GxEPD2_AVR_3C::GDEW042Z15, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9, /*BUSY=*/ 7);
 #endif
 
 // for test on ESP8266
@@ -49,8 +56,14 @@ GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEP015OC1, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/
 //GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDE0213B1, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
 //GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEH029A1, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
 //GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEW027W3, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
-GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEW042T2, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
+//GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEW042T2, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
 //GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEW075T8,  /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
+// 3-color e-papers
+//GxEPD2_AVR_3C display(GxEPD2_AVR_3C::GDEW0154Z04,  /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
+//GxEPD2_AVR_3C display(GxEPD2_AVR_3C::GDEW0213Z16,  /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
+//GxEPD2_AVR_3C display(GxEPD2_AVR_3C::GDEW029Z10,  /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
+//GxEPD2_AVR_3C display(GxEPD2_AVR_3C::GDEW027C44,  /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
+//GxEPD2_AVR_3C display(GxEPD2_AVR_3C::GDEW042Z15,  /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
 #endif
 
 void setup()
@@ -67,8 +80,11 @@ void setup()
   delay(1000);
   showFont("FreeMonoBold9pt7b", &FreeMonoBold9pt7b);
   delay(1000);
-  showPartialUpdate();
-  delay(1000);
+  if (display.hasPartialUpdate())
+  {
+    showPartialUpdate();
+    delay(1000);
+  } // else // on GDEW0154Z04 only full update available, doesn't look nice
   //drawCornerTest();
   //showBox(16, 16, 48, 32, false);
   //showBox(16, 56, 48, 32, true);
@@ -103,7 +119,7 @@ void helloArduino()
   //Serial.println("helloArduino");
   display.setRotation(1);
   display.setFont(&FreeMonoBold9pt7b);
-  display.setTextColor(GxEPD_BLACK);
+  display.setTextColor(display.hasColor() ? GxEPD_RED : GxEPD_BLACK);
   uint16_t x = (display.width() - 160) / 2;
   uint16_t y = display.height() / 4;
   display.setPartialWindow(0, y - 14, display.width(), 20);
@@ -124,7 +140,7 @@ void helloEpaper()
   //Serial.println("helloEpaper");
   display.setRotation(1);
   display.setFont(&FreeMonoBold9pt7b);
-  display.setTextColor(GxEPD_BLACK);
+  display.setTextColor(display.hasColor() ? GxEPD_RED : GxEPD_BLACK);
   uint16_t x = (display.width() - 160) / 2;
   uint16_t y = display.height() * 3 / 4;
   display.setPartialWindow(0, y - 14, display.width(), 20);
@@ -166,7 +182,7 @@ void drawCornerTest()
   display.setFullWindow();
   display.setFont(&FreeMonoBold9pt7b);
   display.setTextColor(GxEPD_BLACK);
-  for (uint16_t r = 0; r < 4; r++)
+  for (uint16_t r = 0; r <= 4; r++)
   {
     display.setRotation(r);
     display.firstPage();
@@ -178,23 +194,11 @@ void drawCornerTest()
       display.fillRect(display.width() - 25, display.height() - 25, 24, 24, GxEPD_BLACK);
       display.fillRect(0, display.height() - 33, 32, 32, GxEPD_BLACK);
       display.setCursor(display.width() / 2, display.height() / 2);
-      display.print(r);
+      display.print(display.getRotation());
     }
     while (display.nextPage());
     delay(2000);
   }
-  display.setRotation(0);
-  do
-  {
-    display.fillScreen(GxEPD_WHITE);
-    display.fillRect(0, 0, 8, 8, GxEPD_BLACK);
-    display.fillRect(display.width() - 18, 0, 16, 16, GxEPD_BLACK);
-    display.fillRect(display.width() - 25, display.height() - 25, 24, 24, GxEPD_BLACK);
-    display.fillRect(0, display.height() - 33, 32, 32, GxEPD_BLACK);
-    display.setCursor(display.width() / 2, display.height() / 2);
-    display.print(0);
-  }
-  while (display.nextPage());
 }
 
 void showFont(const char name[], const GFXfont* f)
@@ -223,9 +227,10 @@ void drawFont(const char name[], const GFXfont* f)
   display.println("0123456789:;<=>?");
   display.println("@ABCDEFGHIJKLMNO");
   display.println("PQRSTUVWXYZ[\\]^_");
-#if defined(HAS_RED_COLOR)
-  display.setTextColor(GxEPD_RED);
-#endif
+  if (display.hasColor())
+  {
+    display.setTextColor(GxEPD_RED);
+  }
   display.println("`abcdefghijklmno");
   display.println("pqrstuvwxyz{|}~ ");
 }
@@ -241,6 +246,7 @@ void showPartialUpdate()
   uint16_t box_h = 20;
   uint16_t cursor_y = box_y + box_h - 6;
   float value = 13.95;
+  uint16_t incr = display.hasFastPartialUpdate() ? 1 : 3;
   display.setFont(&FreeMonoBold9pt7b);
   display.setTextColor(GxEPD_BLACK);
   // show where the update box is
@@ -268,7 +274,7 @@ void showPartialUpdate()
   {
     display.setRotation(r);
     display.setPartialWindow(box_x, box_y, box_w, box_h);
-    for (uint16_t i = 1; i <= 10; i++)
+    for (uint16_t i = 1; i <= 10; i += incr)
     {
       display.firstPage();
       do
@@ -318,7 +324,7 @@ void showPartialUpdate()
     display.setRotation(r);
     display.setPartialWindow(box_x, box_y, box_w, box_h);
     if (box_x >= display.width()) continue; // avoid delay
-    for (uint16_t i = 1; i <= 10; i++)
+    for (uint16_t i = 1; i <= 10; i += incr)
     {
       display.firstPage();
       do
