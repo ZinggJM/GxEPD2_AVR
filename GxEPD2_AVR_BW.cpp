@@ -7,10 +7,16 @@
 //
 // Version: see library.properties
 //
-// Library: https://github.com/ZinggJM/GxEPD_AVR
+// Library: https://github.com/ZinggJM/GxEPD2_AVR
 
 #include "GxEPD2_AVR_BW.h"
 #include "WaveTables.h"
+
+#if defined(ESP8266) || defined(ESP32)
+#include <pgmspace.h>
+#else
+#include <avr/pgmspace.h>
+#endif
 
 GxEPD2_AVR_BW::GxEPD2_AVR_BW(GxEPD_Panel panel, int8_t cs, int8_t dc, int8_t rst, int8_t busy) :
   Adafruit_GFX(GxEPD2_AVR_BW_ScreenDimensions[panel].width, GxEPD2_AVR_BW_ScreenDimensions[panel].height),
@@ -73,9 +79,9 @@ void GxEPD2_AVR_BW::drawPixel(int16_t x, int16_t y, uint16_t color)
 
 void GxEPD2_AVR_BW::init()
 {
-  //  Serial.print(WIDTH); Serial.print("x"); Serial.print(HEIGHT);
-  //  Serial.print(" : "); Serial.print(_pages); Serial.print(" pages of ");
-  //  Serial.print(_page_height); Serial.println(" height");
+  //  Serial.print(WIDTH); Serial.print(F("x")); Serial.print(HEIGHT);
+  //  Serial.print(F(" : ")); Serial.print(_pages); Serial.print(F(" pages of "));
+  //  Serial.print(_page_height); Serial.println(F(" height"));
   if (_cs >= 0)
   {
     digitalWrite(_cs, HIGH);
@@ -108,7 +114,7 @@ void GxEPD2_AVR_BW::init()
   SPISettings settings(4000000, MSBFIRST, SPI_MODE0);
   SPI.beginTransaction(settings);
   SPI.endTransaction();
-  Serial.println("SPI has Transaction");
+  //Serial.println(F("SPI has Transaction"));
 #elif defined(ESP8266) || defined(ESP32)
   SPI.setFrequency(4000000);
 #endif
@@ -369,7 +375,7 @@ bool GxEPD2_AVR_BW::_nextPagePart27()
     return true;
   }
   _refreshWindow(_pw_x, _pw_y, _pw_w, _pw_h);
-  _waitWhileBusy("_nextPage27");
+  _waitWhileBusy(F("_nextPage27"));
   delay(500); // don't stress this display
   //_PowerOff();
   _current_page = -1;
@@ -535,20 +541,30 @@ void GxEPD2_AVR_BW::_writeData(const uint8_t* data, uint16_t n)
   if (_cs >= 0) digitalWrite(_cs, HIGH);
 }
 
-void GxEPD2_AVR_BW::_writeCommandData(const uint8_t* pCommandData, uint8_t datalen)
+void GxEPD2_AVR_BW::_writeDataPGM(const uint8_t* data, uint16_t n)
 {
-  if (_dc >= 0) digitalWrite(_dc, LOW);
   if (_cs >= 0) digitalWrite(_cs, LOW);
-  SPI.transfer(*pCommandData++);
-  if (_dc >= 0) digitalWrite(_dc, HIGH);
-  for (uint8_t i = 0; i < datalen - 1; i++)  // sub the command
+  for (uint8_t i = 0; i < n; i++)
   {
-    SPI.transfer(*pCommandData++);
+    SPI.transfer(pgm_read_byte(data++));
   }
   if (_cs >= 0) digitalWrite(_cs, HIGH);
 }
 
-void GxEPD2_AVR_BW::_waitWhileBusy(const char* comment)
+void GxEPD2_AVR_BW::_writeCommandDataPGM(const uint8_t* pCommandData, uint8_t datalen)
+{
+  if (_dc >= 0) digitalWrite(_dc, LOW);
+  if (_cs >= 0) digitalWrite(_cs, LOW);
+  SPI.transfer(pgm_read_byte(pCommandData++));
+  if (_dc >= 0) digitalWrite(_dc, HIGH);
+  for (uint8_t i = 0; i < datalen - 1; i++)  // sub the command
+  {
+    SPI.transfer(pgm_read_byte(pCommandData++));
+  }
+  if (_cs >= 0) digitalWrite(_cs, HIGH);
+}
+
+void GxEPD2_AVR_BW::_waitWhileBusy(const __FlashStringHelper* comment)
 {
   unsigned long start = micros();
   while (1)
@@ -557,7 +573,7 @@ void GxEPD2_AVR_BW::_waitWhileBusy(const char* comment)
     delay(1);
     if (micros() - start > 10000000)
     {
-      Serial.println("Busy Timeout!");
+      Serial.println(F("Busy Timeout!"));
       break;
     }
   }
@@ -566,7 +582,7 @@ void GxEPD2_AVR_BW::_waitWhileBusy(const char* comment)
 #if !defined(DISABLE_DIAGNOSTIC_OUTPUT)
     unsigned long elapsed = micros() - start;
     Serial.print(comment);
-    Serial.print(" : ");
+    Serial.print(F(" : "));
     Serial.println(elapsed);
 #endif
   }
@@ -684,7 +700,7 @@ void GxEPD2_AVR_BW::_PowerOn(void)
     {
       _writeCommand(0x04);
     }
-    _waitWhileBusy("_PowerOn");
+    _waitWhileBusy(F("_PowerOn"));
   }
   _power_is_on = true;
 }
@@ -701,7 +717,7 @@ void GxEPD2_AVR_BW::_PowerOff(void)
   {
     _writeCommand(0x02); // power off
   }
-  _waitWhileBusy("_PowerOff");
+  _waitWhileBusy(F("_PowerOff"));
   _power_is_on = false;
 }
 
@@ -795,7 +811,7 @@ void GxEPD2_AVR_BW::_InitDisplay(uint8_t em)
       _writeCommand(0x16);
       _writeData(0x00);
       //_writeCommand(0x04);
-      //_waitWhileBusy("_wakeUp Power On");
+      //_waitWhileBusy(F("_wakeUp Power On"));
       _writeCommand(0x00);
       _writeData(0x9f); // b/w, by OTP LUT
       _writeCommand(0x30);
@@ -814,7 +830,7 @@ void GxEPD2_AVR_BW::_InitDisplay(uint8_t em)
       _writeData(0x17);
       _writeData(0x17);
       //_writeCommand(0x04);
-      //_waitWhileBusy("Power On");
+      //_waitWhileBusy(F("Power On"));
       _writeCommand(0x00);
       _writeData(0x1f); // LUT from OTP Pixel with B/W.
       break;
@@ -872,25 +888,25 @@ void GxEPD2_AVR_BW::_Init_Full(uint8_t em)
   switch (_panel)
   {
     case GDEP015OC1:
-      _writeCommandData(GDEP015OC1_LUTDefault_full, sizeof(GDEP015OC1_LUTDefault_full));
+      _writeCommandDataPGM(GDEP015OC1_LUTDefault_full, sizeof(GDEP015OC1_LUTDefault_full));
       break;
     case GDE0213B1:
-      _writeCommandData(GxGDE0213B1_LUTDefault_full, sizeof(GxGDE0213B1_LUTDefault_full));
+      _writeCommandDataPGM(GxGDE0213B1_LUTDefault_full, sizeof(GxGDE0213B1_LUTDefault_full));
       break;
     case GDEH029A1:
-      _writeCommandData(GxGDEH029A1_LUTDefault_full, sizeof(GxGDEH029A1_LUTDefault_full));
+      _writeCommandDataPGM(GxGDEH029A1_LUTDefault_full, sizeof(GxGDEH029A1_LUTDefault_full));
       break;
     case GDEW027W3:
       _writeCommand(0x20);
-      _writeData(GxGDEW027W3_lut_20_vcomDC, sizeof(GxGDEW027W3_lut_20_vcomDC));
+      _writeDataPGM(GxGDEW027W3_lut_20_vcomDC, sizeof(GxGDEW027W3_lut_20_vcomDC));
       _writeCommand(0x21);
-      _writeData(GxGDEW027W3_lut_21_ww, sizeof(GxGDEW027W3_lut_21_ww));
+      _writeDataPGM(GxGDEW027W3_lut_21_ww, sizeof(GxGDEW027W3_lut_21_ww));
       _writeCommand(0x22);
-      _writeData(GxGDEW027W3_lut_22_bw, sizeof(GxGDEW027W3_lut_22_bw));
+      _writeDataPGM(GxGDEW027W3_lut_22_bw, sizeof(GxGDEW027W3_lut_22_bw));
       _writeCommand(0x23);
-      _writeData(GxGDEW027W3_lut_23_wb, sizeof(GxGDEW027W3_lut_23_wb));
+      _writeDataPGM(GxGDEW027W3_lut_23_wb, sizeof(GxGDEW027W3_lut_23_wb));
       _writeCommand(0x24);
-      _writeData(GxGDEW027W3_lut_24_bb, sizeof(GxGDEW027W3_lut_24_bb));
+      _writeDataPGM(GxGDEW027W3_lut_24_bb, sizeof(GxGDEW027W3_lut_24_bb));
       break;
   }
   _PowerOn();
@@ -902,26 +918,26 @@ void GxEPD2_AVR_BW::_Init_Part(uint8_t em)
   switch (_panel)
   {
     case GDEP015OC1:
-      _writeCommandData(GDEP015OC1_LUTDefault_part, sizeof(GDEP015OC1_LUTDefault_part));
+      _writeCommandDataPGM(GDEP015OC1_LUTDefault_part, sizeof(GDEP015OC1_LUTDefault_part));
       break;
     case GDE0213B1:
-      _writeCommandData(GxGDE0213B1_LUTDefault_part, sizeof(GxGDE0213B1_LUTDefault_part));
+      _writeCommandDataPGM(GxGDE0213B1_LUTDefault_part, sizeof(GxGDE0213B1_LUTDefault_part));
       break;
     case GDEH029A1:
-      _writeCommandData(GxGDEH029A1_LUTDefault_part, sizeof(GxGDEH029A1_LUTDefault_part));
+      _writeCommandDataPGM(GxGDEH029A1_LUTDefault_part, sizeof(GxGDEH029A1_LUTDefault_part));
       break;
     case GDEW027W3:
       // no partial update LUT
       _writeCommand(0x20);
-      _writeData(GxGDEW027W3_lut_20_vcomDC, sizeof(GxGDEW027W3_lut_20_vcomDC));
+      _writeDataPGM(GxGDEW027W3_lut_20_vcomDC, sizeof(GxGDEW027W3_lut_20_vcomDC));
       _writeCommand(0x21);
-      _writeData(GxGDEW027W3_lut_21_ww, sizeof(GxGDEW027W3_lut_21_ww));
+      _writeDataPGM(GxGDEW027W3_lut_21_ww, sizeof(GxGDEW027W3_lut_21_ww));
       _writeCommand(0x22);
-      _writeData(GxGDEW027W3_lut_22_bw, sizeof(GxGDEW027W3_lut_22_bw));
+      _writeDataPGM(GxGDEW027W3_lut_22_bw, sizeof(GxGDEW027W3_lut_22_bw));
       _writeCommand(0x23);
-      _writeData(GxGDEW027W3_lut_23_wb, sizeof(GxGDEW027W3_lut_23_wb));
+      _writeDataPGM(GxGDEW027W3_lut_23_wb, sizeof(GxGDEW027W3_lut_23_wb));
       _writeCommand(0x24);
-      _writeData(GxGDEW027W3_lut_24_bb, sizeof(GxGDEW027W3_lut_24_bb));
+      _writeDataPGM(GxGDEW027W3_lut_24_bb, sizeof(GxGDEW027W3_lut_24_bb));
       break;
   }
   _PowerOn();
@@ -934,13 +950,13 @@ void GxEPD2_AVR_BW::_Update_Full(void)
     _writeCommand(0x22);
     _writeData(0xc4);
     _writeCommand(0x20);
-    _waitWhileBusy("_Update_Full");
+    _waitWhileBusy(F("_Update_Full"));
     _writeCommand(0xff);
   }
   else
   {
     _writeCommand(0x12);      //display refresh
-    _waitWhileBusy("_Update_Full");
+    _waitWhileBusy(F("_Update_Full"));
   }
 }
 
@@ -951,13 +967,13 @@ void GxEPD2_AVR_BW::_Update_Part(void)
     _writeCommand(0x22);
     _writeData(0x04);
     _writeCommand(0x20);
-    _waitWhileBusy("_Update_Part");
+    _waitWhileBusy(F("_Update_Part"));
     _writeCommand(0xff);
   }
   else
   {
     _writeCommand(0x12);      //display refresh
-    _waitWhileBusy("_Update_Part");
+    _waitWhileBusy(F("_Update_Part"));
   }
 }
 

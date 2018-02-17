@@ -7,7 +7,7 @@
 //
 // Version: see library.properties
 //
-// Library: https://github.com/ZinggJM/GxEPD_AVR
+// Library: https://github.com/ZinggJM/GxEPD2_AVR
 
 // Supporting Arduino Forum Topics:
 // Waveshare e-paper displays with SPI: http://forum.arduino.cc/index.php?topic=487007.0
@@ -52,7 +52,7 @@ GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEP015OC1, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/
 // for test on ESP8266
 #if defined (ESP8266)
 // select one and adapt to your mapping
-//GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEP015OC1, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
+GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEP015OC1, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
 //GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDE0213B1, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
 //GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEH029A1, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
 //GxEPD2_AVR_BW display(GxEPD2_AVR_BW::GDEW027W3, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
@@ -70,7 +70,7 @@ void setup()
 {
   Serial.begin(115200);
   Serial.println();
-  Serial.println("setup");
+  Serial.println(F("setup"));
   display.init();
   helloWorld();
   delay(1000);
@@ -78,7 +78,7 @@ void setup()
   delay(1000);
   helloEpaper();
   delay(1000);
-  showFont("FreeMonoBold9pt7b", &FreeMonoBold9pt7b);
+  showFont(F("FreeMonoBold9pt7b"), &FreeMonoBold9pt7b);
   delay(1000);
   if (display.hasPartialUpdate())
   {
@@ -88,7 +88,7 @@ void setup()
   //drawCornerTest();
   //showBox(16, 16, 48, 32, false);
   //showBox(16, 56, 48, 32, true);
-  Serial.println("setup done");
+  Serial.println(F("setup done"));
 }
 
 void loop()
@@ -97,7 +97,7 @@ void loop()
 
 void helloWorld()
 {
-  //Serial.println("helloWorld");
+  //Serial.println(F("helloWorld"));
   display.setRotation(1);
   display.setFont(&FreeMonoBold9pt7b);
   display.setTextColor(GxEPD_BLACK);
@@ -108,15 +108,15 @@ void helloWorld()
   {
     display.fillScreen(GxEPD_WHITE);
     display.setCursor(x, y);
-    display.println("Hello World!");
+    display.println(F("Hello World!"));
   }
   while (display.nextPage());
-  //Serial.println("helloWorld done");
+  //Serial.println(F("helloWorld done"));
 }
 
 void helloArduino()
 {
-  //Serial.println("helloArduino");
+  //Serial.println(F("helloArduino"));
   display.setRotation(1);
   display.setFont(&FreeMonoBold9pt7b);
   display.setTextColor(display.hasColor() ? GxEPD_RED : GxEPD_BLACK);
@@ -128,16 +128,16 @@ void helloArduino()
   {
     display.fillScreen(GxEPD_WHITE);
     display.setCursor(x, y);
-    display.println("Hello Arduino!");
+    display.println(F("Hello Arduino!"));
   }
   while (display.nextPage());
   delay(1000);
-  //Serial.println("helloArduino done");
+  //Serial.println(F("helloArduino done"));
 }
 
 void helloEpaper()
 {
-  //Serial.println("helloEpaper");
+  //Serial.println(F("helloEpaper"));
   display.setRotation(1);
   display.setFont(&FreeMonoBold9pt7b);
   display.setTextColor(display.hasColor() ? GxEPD_RED : GxEPD_BLACK);
@@ -149,15 +149,15 @@ void helloEpaper()
   {
     display.fillScreen(GxEPD_WHITE);
     display.setCursor(x, y);
-    display.println("Hello E-Paper!");
+    display.println(F("Hello E-Paper!"));
   }
   while (display.nextPage());
-  //Serial.println("helloEpaper done");
+  //Serial.println(F("helloEpaper done"));
 }
 
 void showBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool partial)
 {
-  //Serial.println("showBox");
+  //Serial.println(F("showBox"));
   display.setRotation(1);
   if (partial)
   {
@@ -174,7 +174,7 @@ void showBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool partial)
     display.fillRect(x, y, w, h, GxEPD_BLACK);
   }
   while (display.nextPage());
-  //Serial.println("showBox done");
+  //Serial.println(F("showBox done"));
 }
 
 void drawCornerTest()
@@ -201,7 +201,7 @@ void drawCornerTest()
   }
 }
 
-void showFont(const char name[], const GFXfont* f)
+void showFont(const __FlashStringHelper* name, const GFXfont* f)
 {
   display.setFullWindow();
   display.setRotation(0);
@@ -214,7 +214,7 @@ void showFont(const char name[], const GFXfont* f)
   while (display.nextPage());
 }
 
-void drawFont(const char name[], const GFXfont* f)
+void drawFont(const __FlashStringHelper* name, const GFXfont* f)
 {
   //display.setRotation(0);
   display.fillScreen(GxEPD_WHITE);
@@ -223,16 +223,16 @@ void drawFont(const char name[], const GFXfont* f)
   display.setCursor(0, 0);
   display.println();
   display.println(name);
-  display.println(" !\"#$%&'()*+,-./");
-  display.println("0123456789:;<=>?");
-  display.println("@ABCDEFGHIJKLMNO");
-  display.println("PQRSTUVWXYZ[\\]^_");
+  display.println(F(" !\"#$%&'()*+,-./"));
+  display.println(F("0123456789:;<=>?"));
+  display.println(F("@ABCDEFGHIJKLMNO"));
+  display.println(F("PQRSTUVWXYZ[\\]^_"));
   if (display.hasColor())
   {
     display.setTextColor(GxEPD_RED);
   }
-  display.println("`abcdefghijklmno");
-  display.println("pqrstuvwxyz{|}~ ");
+  display.println(F("`abcdefghijklmno"));
+  display.println(F("pqrstuvwxyz{|}~ "));
 }
 
 void showPartialUpdate()

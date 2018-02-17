@@ -7,7 +7,7 @@
 //
 // Version: see library.properties
 //
-// Library: https://github.com/ZinggJM/GxEPD_AVR
+// Library: https://github.com/ZinggJM/GxEPD2_AVR
 
 #ifndef _GxEPD2_AVR_BW_H_
 #define _GxEPD2_AVR_BW_H_
@@ -101,7 +101,8 @@ class GxEPD2_AVR_BW : public Adafruit_GFX
     void _writeCommand(uint8_t c);
     void _writeData(uint8_t d);
     void _writeData(const uint8_t* data, uint16_t n);
-    void _writeCommandData(const uint8_t* pCommandData, uint8_t datalen);
+    void _writeDataPGM(const uint8_t* data, uint16_t n);
+    void _writeCommandDataPGM(const uint8_t* pCommandData, uint8_t datalen);
     void _setRamEntryWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t em);
     void _setRamArea(uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye);
     void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
@@ -110,7 +111,7 @@ class GxEPD2_AVR_BW : public Adafruit_GFX
     void _refreshWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void _PowerOn(void);
     void _PowerOff(void);
-    void _waitWhileBusy(const char* comment = 0);
+    void _waitWhileBusy(const __FlashStringHelper* comment = 0);
     void _InitDisplay(uint8_t em);
     void _Init_Full(uint8_t em);
     void _Init_Part(uint8_t em);

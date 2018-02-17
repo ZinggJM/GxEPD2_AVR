@@ -7,7 +7,7 @@
 //
 // Version: see library.properties
 //
-// Library: https://github.com/ZinggJM/GxEPD_AVR
+// Library: https://github.com/ZinggJM/GxEPD2_AVR
 
 #ifndef _GxEPD2_AVR_3C_H_
 #define _GxEPD2_AVR_3C_H_
@@ -96,14 +96,16 @@ class GxEPD2_AVR_3C : public Adafruit_GFX
     void _writeCommand(uint8_t c);
     void _writeData(uint8_t d);
     void _writeData(const uint8_t* data, uint16_t n);
+    void _writeDataPGM(const uint8_t* data, uint16_t n);
     void _writeData_nCS(const uint8_t* data, uint16_t n);
+    void _writeDataPGM_nCS(const uint8_t* data, uint16_t n);
     void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void _setPartialRamArea27(uint8_t command, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void _setRamEntryPartialWindow(uint8_t em);
     void _refreshWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void _PowerOn(void);
     void _PowerOff(void);
-    void _waitWhileBusy(const char* comment = 0);
+    void _waitWhileBusy(const __FlashStringHelper* comment = 0);
     void _InitDisplay();
     void _Init_Full();
     void _Init_Part();

@@ -14,6 +14,12 @@
 #include "GxEPD2_AVR_3C.h"
 #include "WaveTables.h"
 
+#if defined(ESP8266) || defined(ESP32)
+#include <pgmspace.h>
+#else
+#include <avr/pgmspace.h>
+#endif
+
 // this workaround for GDEW042Z15 updates the whole screen
 #define USE_PARTIAL_UPDATE_WORKAROUND_ON_GDEW042Z15
 
@@ -80,9 +86,9 @@ void GxEPD2_AVR_3C::drawPixel(int16_t x, int16_t y, uint16_t color)
 
 void GxEPD2_AVR_3C::init()
 {
-  //  Serial.print(WIDTH); Serial.print("x"); Serial.print(HEIGHT);
-  //  Serial.print(" : "); Serial.print(_pages); Serial.print(" pages of ");
-  //  Serial.print(_page_height); Serial.println(" height");
+  //  Serial.print(WIDTH); Serial.print(F("x")); Serial.print(HEIGHT);
+  //  Serial.print(F(" : ")); Serial.print(_pages); Serial.print(F(" pages of "));
+  //  Serial.print(_page_height); Serial.println(F(" height"));
   if (_cs >= 0)
   {
     digitalWrite(_cs, HIGH);
@@ -115,7 +121,7 @@ void GxEPD2_AVR_3C::init()
   SPISettings settings(4000000, MSBFIRST, SPI_MODE0);
   SPI.beginTransaction(settings);
   SPI.endTransaction();
-  //Serial.println("SPI has Transaction");
+  //Serial.println(F("SPI has Transaction"));
 #elif defined(ESP8266) || defined(ESP32)
   SPI.setFrequency(4000000);
 #endif
@@ -157,7 +163,7 @@ void GxEPD2_AVR_3C::setPartialWindow(uint16_t x, uint16_t y, uint16_t w, uint16_
   }
   else
   {
-    Serial.println("GDEW0154Z04 does not support partial update");
+    Serial.println(F("GDEW0154Z04 does not support partial update"));
   }
 }
 
@@ -435,7 +441,7 @@ bool GxEPD2_AVR_3C::_nextPagePart27()
     return true;
   }
   _refreshWindow(_pw_x, _pw_y, _pw_w, _pw_h);
-  _waitWhileBusy("_nextPage27");
+  _waitWhileBusy(F("_nextPage27"));
   delay(500); // don't stress this display
   _current_page = -1;
   return false;
@@ -481,6 +487,16 @@ void GxEPD2_AVR_3C::_writeData(const uint8_t* data, uint16_t n)
   if (_cs >= 0) digitalWrite(_cs, HIGH);
 }
 
+void GxEPD2_AVR_3C::_writeDataPGM(const uint8_t* data, uint16_t n)
+{
+  if (_cs >= 0) digitalWrite(_cs, LOW);
+  for (uint8_t i = 0; i < n; i++)
+  {
+    SPI.transfer(pgm_read_byte(data++));
+  }
+  if (_cs >= 0) digitalWrite(_cs, HIGH);
+}
+
 void GxEPD2_AVR_3C::_writeData_nCS(const uint8_t* data, uint16_t n)
 {
   for (uint8_t i = 0; i < n; i++)
@@ -491,7 +507,17 @@ void GxEPD2_AVR_3C::_writeData_nCS(const uint8_t* data, uint16_t n)
   }
 }
 
-void GxEPD2_AVR_3C::_waitWhileBusy(const char* comment)
+void GxEPD2_AVR_3C::_writeDataPGM_nCS(const uint8_t* data, uint16_t n)
+{
+  for (uint8_t i = 0; i < n; i++)
+  {
+    if (_cs >= 0) digitalWrite(_cs, LOW);
+    SPI.transfer(pgm_read_byte(data++));
+    if (_cs >= 0) digitalWrite(_cs, HIGH);
+  }
+}
+
+void GxEPD2_AVR_3C::_waitWhileBusy(const __FlashStringHelper* comment)
 {
   unsigned long start = micros();
   while (1)
@@ -500,7 +526,7 @@ void GxEPD2_AVR_3C::_waitWhileBusy(const char* comment)
     delay(1);
     if (micros() - start > 20000000) // >14.9s !
     {
-      Serial.println("Busy Timeout!");
+      Serial.println(F("Busy Timeout!"));
       break;
     }
   }
@@ -509,7 +535,7 @@ void GxEPD2_AVR_3C::_waitWhileBusy(const char* comment)
 #if !defined(DISABLE_DIAGNOSTIC_OUTPUT)
     unsigned long elapsed = micros() - start;
     Serial.print(comment);
-    Serial.print(" : ");
+    Serial.print(F(" : "));
     Serial.println(elapsed);
 #endif
   }
@@ -589,7 +615,7 @@ void GxEPD2_AVR_3C::_PowerOn(void)
   if (!_power_is_on)
   {
     _writeCommand(0x04);
-    _waitWhileBusy("_PowerOn");
+    _waitWhileBusy(F("_PowerOn"));
   }
   _power_is_on = true;
 }
@@ -613,7 +639,7 @@ void GxEPD2_AVR_3C::_PowerOff(void)
       break;
   }
   _writeCommand(0x02); // power off
-  _waitWhileBusy("_PowerOff");
+  _waitWhileBusy(F("_PowerOff"));
   _power_is_on = false;
 }
 
@@ -641,7 +667,7 @@ void GxEPD2_AVR_3C::_InitDisplay()
       _writeData(0x07);
       _writeCommand(0x04);
       // power on needed here!
-      _waitWhileBusy("Power On");
+      _waitWhileBusy(F("Power On"));
       _writeCommand(0X00);
       _writeData(0xcf);
       _writeCommand(0X50);
@@ -661,7 +687,7 @@ void GxEPD2_AVR_3C::_InitDisplay()
       _writeData (0x17);
       _writeData (0x17);
       //_writeCommand(0x04);
-      //_waitWhileBusy("_wakeUp Power On");
+      //_waitWhileBusy(F("_wakeUp Power On"));
       _writeCommand(0X00);
       _writeData(0x8f);
       _writeCommand(0X50);
@@ -677,7 +703,7 @@ void GxEPD2_AVR_3C::_InitDisplay()
       _writeData (0x17);
       _writeData (0x17);
       //_writeCommand(0x04);
-      //_waitWhileBusy("_wakeUp Power On");
+      //_waitWhileBusy(F("_wakeUp Power On"));
       _writeCommand(0X00);
       _writeData(0x8f);
       _writeCommand(0X50);
@@ -716,7 +742,7 @@ void GxEPD2_AVR_3C::_InitDisplay()
       _writeCommand(0x16);
       _writeData(0x00);
       //_writeCommand(0x04);
-      //_waitWhileBusy("_wakeUp Power On");
+      //_waitWhileBusy(F("_wakeUp Power On"));
       _writeCommand(0x00);
       _writeData(0xaf); // by register LUT
       _writeCommand(0x30);
@@ -737,7 +763,7 @@ void GxEPD2_AVR_3C::_InitDisplay()
       _writeData(0x17);
       _writeData(0x17);
       //_writeData(0x04);
-      //_waitWhileBusy("Power On");
+      //_waitWhileBusy(F("Power On"));
       _writeCommand(0x00);
       _writeData(0x0f); // LUT from OTP Pixel with B/W/R.
       break;
@@ -751,33 +777,33 @@ void GxEPD2_AVR_3C::_Init_Full()
   {
     case GDEW0154Z04:
       _writeCommand(0x20);
-      _writeData(GxGDEW0154Z04_lut_20_vcom0, sizeof(GxGDEW0154Z04_lut_20_vcom0));
+      _writeDataPGM(GxGDEW0154Z04_lut_20_vcom0, sizeof(GxGDEW0154Z04_lut_20_vcom0));
       _writeCommand(0x21);
-      _writeData(GxGDEW0154Z04_lut_21_w, sizeof(GxGDEW0154Z04_lut_21_w));
+      _writeDataPGM(GxGDEW0154Z04_lut_21_w, sizeof(GxGDEW0154Z04_lut_21_w));
       _writeCommand(0x22);
-      _writeData(GxGDEW0154Z04_lut_22_b, sizeof(GxGDEW0154Z04_lut_22_b));
+      _writeDataPGM(GxGDEW0154Z04_lut_22_b, sizeof(GxGDEW0154Z04_lut_22_b));
       _writeCommand(0x23);
-      _writeData(GxGDEW0154Z04_lut_23_g1, sizeof(GxGDEW0154Z04_lut_23_g1));
+      _writeDataPGM(GxGDEW0154Z04_lut_23_g1, sizeof(GxGDEW0154Z04_lut_23_g1));
       _writeCommand(0x24);
-      _writeData(GxGDEW0154Z04_lut_24_g2, sizeof(GxGDEW0154Z04_lut_24_g2));
+      _writeDataPGM(GxGDEW0154Z04_lut_24_g2, sizeof(GxGDEW0154Z04_lut_24_g2));
       _writeCommand(0x25);
-      _writeData(GxGDEW0154Z04_lut_25_vcom1, sizeof(GxGDEW0154Z04_lut_25_vcom1));
+      _writeDataPGM(GxGDEW0154Z04_lut_25_vcom1, sizeof(GxGDEW0154Z04_lut_25_vcom1));
       _writeCommand(0x26);
-      _writeData(GxGDEW0154Z04_lut_26_red0, sizeof(GxGDEW0154Z04_lut_26_red0));
+      _writeDataPGM(GxGDEW0154Z04_lut_26_red0, sizeof(GxGDEW0154Z04_lut_26_red0));
       _writeCommand(0x27);
-      _writeData(GxGDEW0154Z04_lut_27_red1, sizeof(GxGDEW0154Z04_lut_27_red1));
+      _writeDataPGM(GxGDEW0154Z04_lut_27_red1, sizeof(GxGDEW0154Z04_lut_27_red1));
       break;
     case GDEW027C44:
       _writeCommand(0x20); //vcom
-      _writeData_nCS(GxGDEW027C44_lut_20_vcomDC, sizeof(GxGDEW027C44_lut_20_vcomDC));
+      _writeDataPGM_nCS(GxGDEW027C44_lut_20_vcomDC, sizeof(GxGDEW027C44_lut_20_vcomDC));
       _writeCommand(0x21); //ww --
-      _writeData_nCS(GxGDEW027C44_lut_21, sizeof(GxGDEW027C44_lut_21));
+      _writeDataPGM_nCS(GxGDEW027C44_lut_21, sizeof(GxGDEW027C44_lut_21));
       _writeCommand(0x22); //bw r
-      _writeData_nCS(GxGDEW027C44_lut_22_red, sizeof(GxGDEW027C44_lut_22_red));
+      _writeDataPGM_nCS(GxGDEW027C44_lut_22_red, sizeof(GxGDEW027C44_lut_22_red));
       _writeCommand(0x23); //wb w
-      _writeData_nCS(GxGDEW027C44_lut_23_white, sizeof(GxGDEW027C44_lut_23_white));
+      _writeDataPGM_nCS(GxGDEW027C44_lut_23_white, sizeof(GxGDEW027C44_lut_23_white));
       _writeCommand(0x24); //bb b
-      _writeData_nCS(GxGDEW027C44_lut_24_black, sizeof(GxGDEW027C44_lut_24_black));
+      _writeDataPGM_nCS(GxGDEW027C44_lut_24_black, sizeof(GxGDEW027C44_lut_24_black));
       break;
   }
   _PowerOn();
@@ -790,15 +816,15 @@ void GxEPD2_AVR_3C::_Init_Part()
   {
     case GDEW027C44:
       _writeCommand(0x20); //vcom
-      _writeData_nCS(GxGDEW027C44_lut_20_vcomDC, sizeof(GxGDEW027C44_lut_20_vcomDC));
+      _writeDataPGM_nCS(GxGDEW027C44_lut_20_vcomDC, sizeof(GxGDEW027C44_lut_20_vcomDC));
       _writeCommand(0x21); //ww --
-      _writeData_nCS(GxGDEW027C44_lut_21, sizeof(GxGDEW027C44_lut_21));
+      _writeDataPGM_nCS(GxGDEW027C44_lut_21, sizeof(GxGDEW027C44_lut_21));
       _writeCommand(0x22); //bw r
-      _writeData_nCS(GxGDEW027C44_lut_22_red, sizeof(GxGDEW027C44_lut_22_red));
+      _writeDataPGM_nCS(GxGDEW027C44_lut_22_red, sizeof(GxGDEW027C44_lut_22_red));
       _writeCommand(0x23); //wb w
-      _writeData_nCS(GxGDEW027C44_lut_23_white, sizeof(GxGDEW027C44_lut_23_white));
+      _writeDataPGM_nCS(GxGDEW027C44_lut_23_white, sizeof(GxGDEW027C44_lut_23_white));
       _writeCommand(0x24); //bb b
-      _writeData_nCS(GxGDEW027C44_lut_24_black, sizeof(GxGDEW027C44_lut_24_black));
+      _writeDataPGM_nCS(GxGDEW027C44_lut_24_black, sizeof(GxGDEW027C44_lut_24_black));
       break;
   }
   _PowerOn();
@@ -807,13 +833,13 @@ void GxEPD2_AVR_3C::_Init_Part()
 void GxEPD2_AVR_3C::_Update_Full(void)
 {
   _writeCommand(0x12); //display refresh
-  _waitWhileBusy("_Update_Full");
+  _waitWhileBusy(F("_Update_Full"));
 }
 
 void GxEPD2_AVR_3C::_Update_Part(void)
 {
   _writeCommand(0x12); //display refresh
-  _waitWhileBusy("_Update_Part");
+  _waitWhileBusy(F("_Update_Part"));
 }
 
 void GxEPD2_AVR_3C::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
