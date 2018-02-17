@@ -14,4 +14,9 @@ Simplified Version of GxEPD for AVR Arduino
 #### - Paged drawing is implemented as picture loop, like in U8G2 (Oliver Kraus)
 #### - see https://github.com/olikraus/u8glib/wiki/tpictureloop
 
-under construction
+### Supporting Arduino Forum Topics:
+
+- Waveshare e-paper displays with SPI: http://forum.arduino.cc/index.php?topic=487007.0
+- Good Dispay ePaper for Arduino : https://forum.arduino.cc/index.php?topic=436411.0
+
+## This is the Initial Version
