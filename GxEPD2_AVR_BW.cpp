@@ -18,10 +18,10 @@
 #include <avr/pgmspace.h>
 #endif
 
-GxEPD2_AVR_BW::GxEPD2_AVR_BW(GxEPD_Panel panel, int8_t cs, int8_t dc, int8_t rst, int8_t busy) :
-  Adafruit_GFX(GxEPD2_AVR_BW_ScreenDimensions[panel].width, GxEPD2_AVR_BW_ScreenDimensions[panel].height),
+GxEPD2_AVR_BW::GxEPD2_AVR_BW(GxEPD2::Panel panel, int8_t cs, int8_t dc, int8_t rst, int8_t busy) :
+  Adafruit_GFX(GxEPD2::ScreenDimensions[panel].width, GxEPD2::ScreenDimensions[panel].height),
   _panel(panel), _cs(cs), _dc(dc), _rst(rst), _busy(busy),
-  _current_page(-1), _using_partial_mode(false)
+  _current_page(-1), _using_partial_mode(false), _mirror(false)
 {
   _initial = true;
   _power_is_on = false;
@@ -29,15 +29,15 @@ GxEPD2_AVR_BW::GxEPD2_AVR_BW(GxEPD_Panel panel, int8_t cs, int8_t dc, int8_t rst
   _pixel_bytes = _width_bytes * uint16_t(HEIGHT); // save uint16_t range
   _page_height = buffer_size / _width_bytes;
   _pages = (HEIGHT / _page_height) + ((HEIGHT % _page_height) > 0);
-  _ram_data_entry_mode  = (_panel == GDE0213B1) ? 0x01 : 0x03;
-  _reverse = (_panel == GDE0213B1);
-  _busy_active_level = (_panel < GDEW027W3) ? HIGH : LOW;
+  _ram_data_entry_mode  = (_panel == GxEPD2::GDE0213B1) ? 0x01 : 0x03;
+  _reverse = (_panel == GxEPD2::GDE0213B1);
+  _busy_active_level = (_panel < GxEPD2::GDEW027W3) ? HIGH : LOW;
 }
 
 void GxEPD2_AVR_BW::drawPixel(int16_t x, int16_t y, uint16_t color)
 {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
-
+  if (_mirror) x = width() - x - 1;
   // check rotation, move pixel around if necessary
   switch (getRotation())
   {
@@ -75,6 +75,12 @@ void GxEPD2_AVR_BW::drawPixel(int16_t x, int16_t y, uint16_t color)
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
   else
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+}
+
+bool GxEPD2_AVR_BW::mirror(bool m)
+{
+  swap (_mirror, m);
+  return m;
 }
 
 void GxEPD2_AVR_BW::init()
@@ -156,18 +162,18 @@ void GxEPD2_AVR_BW::firstPage()
   {
     switch (_panel)
     {
-      case GDEP015OC1:
-      case GDE0213B1:
-      case GDEH029A1:
+      case GxEPD2::GDEP015OC1:
+      case GxEPD2::GDE0213B1:
+      case GxEPD2::GDEH029A1:
         _Init_Full(_ram_data_entry_mode);
         _writeCommand(0x24);
         break;
-      case GDEW027W3:
-      case GDEW042T2:
+      case GxEPD2::GDEW027W3:
+      case GxEPD2::GDEW042T2:
         _Init_Full(_ram_data_entry_mode);
         _writeCommand(0x13);
         break;
-      case GDEW075T8:
+      case GxEPD2::GDEW075T8:
         _Init_Full(_ram_data_entry_mode);
         _writeCommand(0x10);
         break;
@@ -179,23 +185,23 @@ void GxEPD2_AVR_BW::firstPage()
     {
       switch (_panel)
       {
-        case GDEP015OC1:
-        case GDE0213B1:
-        case GDEH029A1:
+        case GxEPD2::GDEP015OC1:
+        case GxEPD2::GDE0213B1:
+        case GxEPD2::GDEH029A1:
           _Init_Part(_ram_data_entry_mode);
           _setRamEntryWindow(_pw_x, _pw_y, _pw_w, _pw_h, _ram_data_entry_mode);
           break;
-        case GDEW027W3:
+        case GxEPD2::GDEW027W3:
           _Init_Part(_ram_data_entry_mode);
           _setPartialRamArea(_pw_x, _pw_y, _pw_w, _pw_h);
           break;
-        case GDEW042T2:
+        case GxEPD2::GDEW042T2:
           _Init_Part(_ram_data_entry_mode);
           _writeCommand(0x91); // partial in
           _setPartialRamArea(_pw_x, _pw_y, _pw_w, _pw_h);
           _writeCommand(0x13);
           break;
-        case GDEW075T8:
+        case GxEPD2::GDEW075T8:
           _Init_Part(_ram_data_entry_mode);
           _writeCommand(0x91); // partial in
           _setPartialRamArea(_pw_x, _pw_y, _pw_w, _pw_h);
@@ -211,15 +217,15 @@ bool GxEPD2_AVR_BW::nextPage()
   {
     switch (_panel)
     {
-      case GDEP015OC1:
-      case GDE0213B1:
-      case GDEH029A1:
+      case GxEPD2::GDEP015OC1:
+      case GxEPD2::GDE0213B1:
+      case GxEPD2::GDEH029A1:
         return _nextPageFull();
-      case GDEW027W3:
+      case GxEPD2::GDEW027W3:
         return _nextPageFull27();
-      case GDEW042T2:
+      case GxEPD2::GDEW042T2:
         return _nextPageFull42();
-      case GDEW075T8:
+      case GxEPD2::GDEW075T8:
         return _nextPageFull75();
     }
   }
@@ -227,15 +233,15 @@ bool GxEPD2_AVR_BW::nextPage()
   {
     switch (_panel)
     {
-      case GDEP015OC1:
-      case GDE0213B1:
-      case GDEH029A1:
+      case GxEPD2::GDEP015OC1:
+      case GxEPD2::GDE0213B1:
+      case GxEPD2::GDEH029A1:
         return _nextPagePart();
-      case GDEW027W3:
+      case GxEPD2::GDEW027W3:
         return _nextPagePart27();
-      case GDEW042T2:
+      case GxEPD2::GDEW042T2:
         return _nextPagePart42();
-      case GDEW075T8:
+      case GxEPD2::GDEW075T8:
         return _nextPagePart75();
     }
   }
@@ -245,6 +251,32 @@ bool GxEPD2_AVR_BW::nextPage()
 void GxEPD2_AVR_BW::powerOff(void)
 {
   _PowerOff();
+}
+
+void GxEPD2_AVR_BW::drawInvertedBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t w, int16_t h, uint16_t color)
+{
+  // taken from Adafruit_GFX.cpp, modified
+  int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
+  uint8_t byte = 0;
+  for (int16_t j = 0; j < h; j++)
+  {
+    for (int16_t i = 0; i < w; i++ )
+    {
+      if (i & 7) byte <<= 1;
+      else
+      {
+#if defined(__AVR) || defined(ESP8266) || defined(ESP32)
+        byte = pgm_read_byte(&bitmap[j * byteWidth + i / 8]);
+#else
+        byte = bitmap[j * byteWidth + i / 8];
+#endif
+      }
+      if (!(byte & 0x80))
+      {
+        drawPixel(x + i, y + j, color);
+      }
+    }
+  }
 }
 
 bool GxEPD2_AVR_BW::_nextPageFull()
@@ -440,7 +472,15 @@ bool GxEPD2_AVR_BW::_nextPagePart42()
     fillScreen(GxEPD_WHITE);
     return true;
   }
-  _Update_Part();
+  if (!_second_phase)
+  {
+    _Update_Part();
+    _current_page = 0;
+    _second_phase = true;
+    fillScreen(GxEPD_WHITE);
+    _writeCommand(0x13);
+    return true;
+  }
   _writeCommand(0x92); // partial out
   _current_page = -1;
   return false;
@@ -639,7 +679,7 @@ void GxEPD2_AVR_BW::_setRamPointer(uint16_t x, uint16_t y)
 
 void GxEPD2_AVR_BW::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
-  if (_panel == GDEW027W3)
+  if (_panel == GxEPD2::GDEW027W3)
   {
     w = (w + 7 + (x % 8)) & 0xfff8; // byte boundary exclusive (round up)
     _writeCommand(0x15);
@@ -690,7 +730,7 @@ void GxEPD2_AVR_BW::_PowerOn(void)
 {
   if (!_power_is_on)
   {
-    if (_panel < GDEW027W3)
+    if (_panel < GxEPD2::GDEW027W3)
     {
       _writeCommand(0x22);
       _writeData(0xc0);
@@ -707,7 +747,7 @@ void GxEPD2_AVR_BW::_PowerOn(void)
 
 void GxEPD2_AVR_BW::_PowerOff(void)
 {
-  if (_panel < GDEW027W3)
+  if (_panel < GxEPD2::GDEW027W3)
   {
     _writeCommand(0x22);
     _writeData(0xc3);
@@ -725,7 +765,7 @@ void GxEPD2_AVR_BW::_InitDisplay(uint8_t em)
 {
   switch (_panel)
   {
-    case GDEP015OC1:
+    case GxEPD2::GDEP015OC1:
       _writeCommand(0x01); // Panel configuration, Gate selection
       _writeData((HEIGHT - 1) % 256);
       _writeData((HEIGHT - 1) / 256);
@@ -742,7 +782,7 @@ void GxEPD2_AVR_BW::_InitDisplay(uint8_t em)
       _writeData(0x08);    // 2us per line
       _setRamEntryWindow(0, 0, WIDTH, HEIGHT, em);
       break;
-    case GDE0213B1:
+    case GxEPD2::GDE0213B1:
       _writeCommand(0x01); // Panel configuration, Gate selection
       _writeData((HEIGHT - 1) % 256);
       _writeData((HEIGHT - 1) / 256);
@@ -759,7 +799,7 @@ void GxEPD2_AVR_BW::_InitDisplay(uint8_t em)
       _writeData(0x08);    // 2us per line
       _setRamEntryWindow(0, 0, WIDTH, HEIGHT, em);
       break;
-    case GDEH029A1:
+    case GxEPD2::GDEH029A1:
       _writeCommand(0x01); // Panel configuration, Gate selection
       _writeData((HEIGHT - 1) % 256);
       _writeData((HEIGHT - 1) / 256);
@@ -776,7 +816,7 @@ void GxEPD2_AVR_BW::_InitDisplay(uint8_t em)
       _writeData(0x08);    // 2us per line
       _setRamEntryWindow(0, 0, WIDTH, HEIGHT, em);
       break;
-    case GDEW027W3:
+    case GxEPD2::GDEW027W3:
       _writeCommand(0x01);
       _writeData (0x03);
       _writeData (0x00);
@@ -824,7 +864,7 @@ void GxEPD2_AVR_BW::_InitDisplay(uint8_t em)
       _writeCommand(0x82);
       _writeData (0x12);
       break;
-    case GDEW042T2:
+    case GxEPD2::GDEW042T2:
       _writeCommand(0x06); // boost
       _writeData(0x17);
       _writeData(0x17);
@@ -832,9 +872,10 @@ void GxEPD2_AVR_BW::_InitDisplay(uint8_t em)
       //_writeCommand(0x04);
       //_waitWhileBusy(F("Power On"));
       _writeCommand(0x00);
-      _writeData(0x1f); // LUT from OTP Pixel with B/W.
+      //_writeData(0x1f); // LUT from OTP Pixel with B/W.
+      _writeData(0x3F); //300x400 B/W mode, LUT set by register
       break;
-    case GDEW075T8:
+    case GxEPD2::GDEW075T8:
       if (!_power_is_on && (_rst >= 0))
       {
         digitalWrite(_rst, 0);
@@ -887,16 +928,16 @@ void GxEPD2_AVR_BW::_Init_Full(uint8_t em)
   _InitDisplay(em);
   switch (_panel)
   {
-    case GDEP015OC1:
+    case GxEPD2::GDEP015OC1:
       _writeCommandDataPGM(GDEP015OC1_LUTDefault_full, sizeof(GDEP015OC1_LUTDefault_full));
       break;
-    case GDE0213B1:
+    case GxEPD2::GDE0213B1:
       _writeCommandDataPGM(GxGDE0213B1_LUTDefault_full, sizeof(GxGDE0213B1_LUTDefault_full));
       break;
-    case GDEH029A1:
+    case GxEPD2::GDEH029A1:
       _writeCommandDataPGM(GxGDEH029A1_LUTDefault_full, sizeof(GxGDEH029A1_LUTDefault_full));
       break;
-    case GDEW027W3:
+    case GxEPD2::GDEW027W3:
       _writeCommand(0x20);
       _writeDataPGM(GxGDEW027W3_lut_20_vcomDC, sizeof(GxGDEW027W3_lut_20_vcomDC));
       _writeCommand(0x21);
@@ -908,6 +949,18 @@ void GxEPD2_AVR_BW::_Init_Full(uint8_t em)
       _writeCommand(0x24);
       _writeDataPGM(GxGDEW027W3_lut_24_bb, sizeof(GxGDEW027W3_lut_24_bb));
       break;
+    case GxEPD2::GDEW042T2:
+      _writeCommand(0x20);
+      _writeDataPGM(GxGDEW042T2_lut_20_vcom0_full, sizeof(GxGDEW042T2_lut_20_vcom0_full));
+      _writeCommand(0x21);
+      _writeDataPGM(GxGDEW042T2_lut_21_ww_full, sizeof(GxGDEW042T2_lut_21_ww_full));
+      _writeCommand(0x22);
+      _writeDataPGM(GxGDEW042T2_lut_22_bw_full, sizeof(GxGDEW042T2_lut_22_bw_full));
+      _writeCommand(0x23);
+      _writeDataPGM(GxGDEW042T2_lut_23_wb_full, sizeof(GxGDEW042T2_lut_23_wb_full));
+      _writeCommand(0x24);
+      _writeDataPGM(GxGDEW042T2_lut_24_bb_full, sizeof(GxGDEW042T2_lut_24_bb_full));
+      break;
   }
   _PowerOn();
 }
@@ -917,16 +970,16 @@ void GxEPD2_AVR_BW::_Init_Part(uint8_t em)
   _InitDisplay(em);
   switch (_panel)
   {
-    case GDEP015OC1:
+    case GxEPD2::GDEP015OC1:
       _writeCommandDataPGM(GDEP015OC1_LUTDefault_part, sizeof(GDEP015OC1_LUTDefault_part));
       break;
-    case GDE0213B1:
+    case GxEPD2::GDE0213B1:
       _writeCommandDataPGM(GxGDE0213B1_LUTDefault_part, sizeof(GxGDE0213B1_LUTDefault_part));
       break;
-    case GDEH029A1:
+    case GxEPD2::GDEH029A1:
       _writeCommandDataPGM(GxGDEH029A1_LUTDefault_part, sizeof(GxGDEH029A1_LUTDefault_part));
       break;
-    case GDEW027W3:
+    case GxEPD2::GDEW027W3:
       // no partial update LUT
       _writeCommand(0x20);
       _writeDataPGM(GxGDEW027W3_lut_20_vcomDC, sizeof(GxGDEW027W3_lut_20_vcomDC));
@@ -939,13 +992,25 @@ void GxEPD2_AVR_BW::_Init_Part(uint8_t em)
       _writeCommand(0x24);
       _writeDataPGM(GxGDEW027W3_lut_24_bb, sizeof(GxGDEW027W3_lut_24_bb));
       break;
+    case GxEPD2::GDEW042T2:
+      _writeCommand(0x20);
+      _writeDataPGM(GxGDEW042T2_lut_20_vcom0_partial, sizeof(GxGDEW042T2_lut_20_vcom0_partial));
+      _writeCommand(0x21);
+      _writeDataPGM(GxGDEW042T2_lut_21_ww_partial, sizeof(GxGDEW042T2_lut_21_ww_partial));
+      _writeCommand(0x22);
+      _writeDataPGM(GxGDEW042T2_lut_22_bw_partial, sizeof(GxGDEW042T2_lut_22_bw_partial));
+      _writeCommand(0x23);
+      _writeDataPGM(GxGDEW042T2_lut_23_wb_partial, sizeof(GxGDEW042T2_lut_23_wb_partial));
+      _writeCommand(0x24);
+      _writeDataPGM(GxGDEW042T2_lut_24_bb_partial, sizeof(GxGDEW042T2_lut_24_bb_partial));
+      break;
   }
   _PowerOn();
 }
 
 void GxEPD2_AVR_BW::_Update_Full(void)
 {
-  if (_panel < GDEW027W3)
+  if (_panel < GxEPD2::GDEW027W3)
   {
     _writeCommand(0x22);
     _writeData(0xc4);
@@ -962,7 +1027,7 @@ void GxEPD2_AVR_BW::_Update_Full(void)
 
 void GxEPD2_AVR_BW::_Update_Part(void)
 {
-  if (_panel < GDEW027W3)
+  if (_panel < GxEPD2::GDEW027W3)
   {
     _writeCommand(0x22);
     _writeData(0x04);

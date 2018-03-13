@@ -19,4 +19,5 @@ Simplified Version of GxEPD for AVR Arduino
 - Waveshare e-paper displays with SPI: http://forum.arduino.cc/index.php?topic=487007.0
 - Good Dispay ePaper for Arduino : https://forum.arduino.cc/index.php?topic=436411.0
 
-## This is the Initial Version
+### Version 1.0.1
+- Example Bitmaps & 4.2" b/w fast partial update
