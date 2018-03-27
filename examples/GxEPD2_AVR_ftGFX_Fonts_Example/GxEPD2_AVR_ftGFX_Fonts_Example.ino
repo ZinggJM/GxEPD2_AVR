@@ -7,14 +7,13 @@
 //
 // Version: see library.properties
 //
-// Library: https://github.com/ZinggJM/GxEPD2_AVR
+// Library: https://github.com/ZinggJM/GxEPD2_32
 //
-// GxEPD2_AVR_U8T2_Fonts_Example : show use of U8G2_FOR_ADAFRUIT_GFX with GxEPD2
+// GxEPD2_AVR_ftGFX_Fonts_Example : show use of ftGFX_for_Adafruit_GFX with GxEPD2
 //
-// Library: https://github.com/olikraus/U8g2_for_Adafruit_GFX
-// see: https://github.com/olikraus/U8g2_for_Adafruit_GFX/blob/master/README.md
+// ftGFX_for_Adafruit_GFX uses Adafruit_ftGFX from https://github.com/ZinggJM/Adafruit_ftGFX
 //
-// Initial, experimental version GxEPD2_AVR_U8T2_Fonts_Example! for test use only
+// Initial, experimental version GxEPD2_32_ftGFX_Fonts_Example! for test use only
 
 // Supporting Arduino Forum Topics:
 // Waveshare e-paper displays with SPI: http://forum.arduino.cc/index.php?topic=487007.0
@@ -35,7 +34,7 @@
 
 #include <GxEPD2_AVR_BW.h>
 #include <GxEPD2_AVR_3C.h>
-#include <U8g2_for_Adafruit_GFX.h>
+#include <additions/ftGFX_for_Adafruit_GFX.h>
 
 #if defined(__AVR)
 // select one and adapt to your mapping
@@ -70,7 +69,7 @@ GxEPD2_AVR_BW display(GxEPD2::GDEW042T2, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2
 //GxEPD2_AVR_3C display(GxEPD2::GDEW042Z15,  /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2, /*BUSY=D2*/ 4);
 #endif
 
-U8G2_FOR_ADAFRUIT_GFX u8g2_for_adafruit_gfx;
+ftGFX_for_Adafruit_GFX ftGFX(display);
 
 void setup()
 {
@@ -78,17 +77,19 @@ void setup()
   Serial.println();
   Serial.println(F("setup"));
   display.init();
-  u8g2_for_adafruit_gfx.begin(display); // connect u8g2 procedures to Adafruit GFX
   helloWorld();
   delay(1000);
   helloArduino();
   delay(1000);
   helloEpaper();
   delay(1000);
-  showFont(F("u8g2_font_helvR14_tf"), u8g2_font_helvR14_tf); // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
+  showFont(F("Open_Sans_Bold_12pt"), OPENSANSBOLD_12);
   delay(2000);
-  showFont(F("u8g2_font_profont22_mr"), u8g2_font_profont22_mr); // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
-  delay(1000);
+  //showFont(F("Open_Sans_Bold_14pt"), OPENSANSBOLD_14);
+  //delay(2000);
+  showCharacterSet(OPENSANSBOLD_12);
+  //delay(2000);
+  //showCharacterSet(OPENSANSBOLD_14);
   Serial.println(F("setup done"));
 }
 
@@ -101,19 +102,16 @@ void helloWorld()
   //Serial.println(F("helloWorld"));
   uint16_t bg = GxEPD_WHITE;
   uint16_t fg = GxEPD_BLACK;
-  u8g2_for_adafruit_gfx.setFontMode(1);                 // use u8g2 transparent mode (this is default)
-  u8g2_for_adafruit_gfx.setFontDirection(0);            // left to right (this is default)
-  u8g2_for_adafruit_gfx.setForegroundColor(fg);         // apply Adafruit GFX color
-  u8g2_for_adafruit_gfx.setBackgroundColor(bg);         // apply Adafruit GFX color
-  u8g2_for_adafruit_gfx.setFont(u8g2_font_helvR14_tf);  // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
+  ftGFX.setFont(OPENSANSBOLD_12);
+  ftGFX.setTextColor(fg, bg);
   uint16_t x = (display.width() - 160) / 2;
   uint16_t y = display.height() / 2;
   display.firstPage();
   do
   {
     display.fillScreen(bg);
-    u8g2_for_adafruit_gfx.setCursor(x, y); // start writing at this position
-    u8g2_for_adafruit_gfx.print(F("Hello World!"));
+    ftGFX.setCursor(x, y); // start writing at this position
+    ftGFX.print(F("Hello World!"));
   }
   while (display.nextPage());
   //Serial.println(F("helloWorld done"));
@@ -124,20 +122,17 @@ void helloArduino()
   //Serial.println(F("helloArduino"));
   uint16_t bg = GxEPD_WHITE;
   uint16_t fg = (display.hasColor() ? GxEPD_RED : GxEPD_BLACK);
-  u8g2_for_adafruit_gfx.setFontMode(1);                 // use u8g2 transparent mode (this is default)
-  u8g2_for_adafruit_gfx.setFontDirection(0);            // left to right (this is default)
-  u8g2_for_adafruit_gfx.setForegroundColor(fg);         // apply Adafruit GFX color
-  u8g2_for_adafruit_gfx.setBackgroundColor(bg);         // apply Adafruit GFX color
-  u8g2_for_adafruit_gfx.setFont(u8g2_font_helvR14_tf);  // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
+  ftGFX.setFont(OPENSANSBOLD_12);
+  ftGFX.setTextColor(fg, bg);
   uint16_t x = (display.width() - 160) / 2;
   uint16_t y = display.height() / 4;
-  display.setPartialWindow(0, y - 14, display.width(), 20);
+  display.setPartialWindow(0, y, display.width(), 20);
   display.firstPage();
   do
   {
     display.fillScreen(bg);
-    u8g2_for_adafruit_gfx.setCursor(x, y);
-    u8g2_for_adafruit_gfx.println(F("Hello Arduino!"));
+    ftGFX.setCursor(x, y);
+    ftGFX.println(F("Hello Arduino!"));
   }
   while (display.nextPage());
   //Serial.println(F("helloArduino done"));
@@ -148,34 +143,28 @@ void helloEpaper()
   //Serial.println(F("helloEpaper"));
   uint16_t bg = GxEPD_WHITE;
   uint16_t fg = (display.hasColor() ? GxEPD_RED : GxEPD_BLACK);
-  u8g2_for_adafruit_gfx.setFontMode(1);                 // use u8g2 transparent mode (this is default)
-  u8g2_for_adafruit_gfx.setFontDirection(0);            // left to right (this is default)
-  u8g2_for_adafruit_gfx.setForegroundColor(fg);         // apply Adafruit GFX color
-  u8g2_for_adafruit_gfx.setBackgroundColor(bg);         // apply Adafruit GFX color
-  u8g2_for_adafruit_gfx.setFont(u8g2_font_helvR14_tf);  // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
+  ftGFX.setFont(OPENSANSBOLD_12);
+  ftGFX.setTextColor(fg, bg);
   uint16_t x = (display.width() - 160) / 2;
   uint16_t y = display.height() * 3 / 4;
-  display.setPartialWindow(0, y - 14, display.width(), 20);
+  display.setPartialWindow(0, y, display.width(), 20);
   display.firstPage();
   do
   {
     display.fillScreen(bg);
-    u8g2_for_adafruit_gfx.setCursor(x, y);
-    u8g2_for_adafruit_gfx.println(F("Hello E-Paper!"));
+    ftGFX.setCursor(x, y);
+    ftGFX.println(F("Hello E-Paper!"));
   }
   while (display.nextPage());
   //Serial.println("F(helloEpaper done"));
 }
 
-void showFont(const __FlashStringHelper* name, const uint8_t *font)
+void showFont(const __FlashStringHelper* name, uint8_t font)
 {
   display.setFullWindow();
   display.setRotation(0);
-  u8g2_for_adafruit_gfx.setFontMode(1);                   // use u8g2 transparent mode (this is default)
-  u8g2_for_adafruit_gfx.setFontDirection(0);              // left to right (this is default)
-  u8g2_for_adafruit_gfx.setForegroundColor(GxEPD_BLACK);  // apply Adafruit GFX color
-  u8g2_for_adafruit_gfx.setBackgroundColor(GxEPD_WHITE);  // apply Adafruit GFX color
-  u8g2_for_adafruit_gfx.setFont(font); // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
+  ftGFX.setFont(font);
+  ftGFX.setTextColor(GxEPD_BLACK, GxEPD_WHITE);
   display.firstPage();
   do
   {
@@ -188,29 +177,53 @@ void drawFont(const __FlashStringHelper* name)
 {
   //display.setRotation(0);
   display.fillScreen(GxEPD_WHITE);
-  uint16_t dy = u8g2_for_adafruit_gfx.getFontAscent() - u8g2_for_adafruit_gfx.getFontDescent();
-  u8g2_for_adafruit_gfx.setCursor(0, 0);
-  u8g2_for_adafruit_gfx.println();
-  u8g2_for_adafruit_gfx.setCursor(0, u8g2_for_adafruit_gfx.getCursorY() + dy); // issue #5
-  u8g2_for_adafruit_gfx.println(name);
-  u8g2_for_adafruit_gfx.setCursor(0, u8g2_for_adafruit_gfx.getCursorY() + dy); // issue #5
-  u8g2_for_adafruit_gfx.println(F(" !\"#$%&'()*+,-./"));
-  u8g2_for_adafruit_gfx.setCursor(0, u8g2_for_adafruit_gfx.getCursorY() + dy); // issue #5
-  u8g2_for_adafruit_gfx.println(F("0123456789:;<=>?"));
-  u8g2_for_adafruit_gfx.setCursor(0, u8g2_for_adafruit_gfx.getCursorY() + dy); // issue #5
-  u8g2_for_adafruit_gfx.println(F("@ABCDEFGHIJKLMNO"));
-  u8g2_for_adafruit_gfx.setCursor(0, u8g2_for_adafruit_gfx.getCursorY() + dy); // issue #5
-  u8g2_for_adafruit_gfx.println(F("PQRSTUVWXYZ[\\]^_"));
-  u8g2_for_adafruit_gfx.setCursor(0, u8g2_for_adafruit_gfx.getCursorY() + dy); // issue #5
+  ftGFX.setCursor(0, 0);
+  //ftGFX.println();
+  ftGFX.println(name);
+  ftGFX.println(F(" !\"#$%&'()*+,-./"));
+  ftGFX.println(F("0123456789:;<=>?"));
+  ftGFX.println(F("@ABCDEFGHIJKLMNO"));
+  ftGFX.println(F("PQRSTUVWXYZ[\\]^_"));
   if (display.hasColor())
   {
-    u8g2_for_adafruit_gfx.setForegroundColor(GxEPD_RED);
+    ftGFX.setTextColor(GxEPD_RED, GxEPD_WHITE);
   }
-  u8g2_for_adafruit_gfx.println(F("`abcdefghijklmno"));
-  u8g2_for_adafruit_gfx.setCursor(0, u8g2_for_adafruit_gfx.getCursorY() + dy); // issue #5
-  u8g2_for_adafruit_gfx.println(F("pqrstuvwxyz{|}~ "));
-  u8g2_for_adafruit_gfx.setCursor(0, u8g2_for_adafruit_gfx.getCursorY() + dy); // issue #5
-  u8g2_for_adafruit_gfx.println(F("Umlaut ÄÖÜäéöü"));
+  ftGFX.println(F("`abcdefghijklmno"));
+  ftGFX.println(F("pqrstuvwxyz{|}~ "));
+  delay(1);
+  ftGFX.println(F("Umlaut ÄÖÜäéöü"));
+}
+
+void showCharacterSet(uint8_t font)
+{
+  ftGFX.setFont(font);
+  ftGFX.setTextColor(GxEPD_BLACK, GxEPD_WHITE);
+  uint16_t perLine = ftGFX.width() / ftGFX.getStringWidth(F("A"));
+  uint16_t perColumn = ftGFX.height() / ftGFX.getCharHeight();
+  uint16_t lines = (255 - 0x20) / perLine;
+  uint16_t pages = lines / perColumn;
+  uint16_t chr = 0x20;
+  for (uint16_t page = 0; page <= pages; page++)
+  {
+    display.firstPage();
+    do
+    {
+      uint16_t pchr = chr;
+      ftGFX.setCursor(0, 0);
+      display.fillScreen(GxEPD_WHITE);
+      for (uint16_t l = 0; (l <= lines) && (pchr < 255); l++)
+      {
+        for (uint16_t c = 0; (c < perLine) && (pchr < 255); c++, pchr++)
+        {
+          ftGFX.write(pchr);
+        }
+        ftGFX.write('\n');
+      }
+    }
+    while (display.nextPage());
+    chr += perLine * perColumn;
+    delay(2000);
+  }
 }
 
 
