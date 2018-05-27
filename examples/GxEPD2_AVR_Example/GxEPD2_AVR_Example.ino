@@ -86,7 +86,12 @@ void setup()
   Serial.println();
   Serial.println(F("setup"));
   display.init();
+  // first update needs full refresh
   helloWorld();
+  delay(1000);
+  // partial refresh mode can be used to full screen,
+  // effective if hasFastPartialUpdate()
+  helloFullScreenPartialMode();
   delay(1000);
   helloArduino();
   delay(1000);
@@ -103,6 +108,7 @@ void setup()
   //drawCornerTest();
   //showBox(16, 16, 48, 32, false);
   //showBox(16, 56, 48, 32, true);
+  display.powerOff();
   Serial.println(F("setup done"));
 }
 
@@ -113,6 +119,7 @@ void loop()
 void helloWorld()
 {
   //Serial.println(F("helloWorld"));
+  display.setFullWindow();
   display.setRotation(1);
   display.setFont(&FreeMonoBold9pt7b);
   display.setTextColor(GxEPD_BLACK);
@@ -127,6 +134,44 @@ void helloWorld()
   }
   while (display.nextPage());
   //Serial.println(F("helloWorld done"));
+}
+
+void helloFullScreenPartialMode()
+{
+  //Serial.println(F("helloFullScreenPartialMode"));
+  display.setPartialWindow(0, 0, display.width(), display.height());
+  display.setRotation(1);
+  display.setFont(&FreeMonoBold9pt7b);
+  display.setTextColor(GxEPD_BLACK);
+  display.firstPage();
+  do
+  {
+    uint16_t x = (display.width() - 160) / 2;
+    uint16_t y = display.height() / 2;
+    display.fillScreen(GxEPD_WHITE);
+    display.setCursor(x, y);
+    display.println(F("Hello World!"));
+    y = display.height() / 4;
+    display.setCursor(x, y);
+    display.println(F("full screen"));
+    y = display.height() * 3 / 4;
+    if (display.width() <= 200) x = 0;
+    display.setCursor(x, y);
+    if (display.hasFastPartialUpdate())
+    {
+      display.println(F("fast partial mode"));
+    }
+    else if (display.hasPartialUpdate())
+    {
+      display.println(F("slow partial mode"));
+    }
+    else
+    {
+      display.println(F("no partial mode"));
+    }
+  }
+  while (display.nextPage());
+  //Serial.println(F("helloFullScreenPartialMode done"));
 }
 
 void helloArduino()
